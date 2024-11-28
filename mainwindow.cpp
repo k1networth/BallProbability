@@ -61,9 +61,9 @@ void MainWindow::setInitialValues(int balls1, int blue1, int balls2, int blue2) 
     double probOneBlueOneRed = calculateOneBlueOneRedProbability();
 
     // Обновление текста с вероятностями
-    twoBlueLabel->setText(QString("Вероятность достать 2 синих шара: %1%").arg(probTwoBlue * 100));
-    twoRedLabel->setText(QString("Вероятность достать 2 красных шара: %1%").arg(probTwoRed * 100));
-    oneBlueOneRedLabel->setText(QString("Вероятность достать 1 красный и 1 синий шар: %1%").arg(probOneBlueOneRed * 100));
+    twoBlueLabel->setText(QString("Вероятность достать 2 синих шара: %1%").arg(probTwoBlue * 100, 0, 'f', 4));
+    twoRedLabel->setText(QString("Вероятность достать 2 красных шара: %1%").arg(probTwoRed * 100, 0, 'f', 4));
+    oneBlueOneRedLabel->setText(QString("Вероятность достать 1 красный и 1 синий шар: %1%").arg(probOneBlueOneRed * 100, 0, 'f', 4));
 }
 
 QGroupBox* MainWindow::createBasketGroup(const QString &title, int totalBalls, int blueBalls) {
@@ -199,65 +199,35 @@ void MainWindow::updateLastAction(QGroupBox *basketGroup, const QString &actionT
 }
 
 double MainWindow::calculateTwoBlueProbability() {
-    double prob = 0.0;
+    int totalBlue = blueBallsBasket1 + blueBallsBasket2;
+    int totalRed = (totalBallsBasket1 - blueBallsBasket1) + (totalBallsBasket2 - blueBallsBasket2);
+    int totalBalls = totalBlue + totalRed;
 
-    // Для корзины 1
-    if (blueBallsBasket1 >= 2) {
-        double comb1 = (double)blueBallsBasket1 * (blueBallsBasket1 - 1) / (totalBallsBasket1 * (totalBallsBasket1 - 1));
-        prob += comb1;
-    }
+    if (totalBalls < 2) return 0.0;
 
-    // Для корзины 2
-    if (blueBallsBasket2 >= 2) {
-        double comb2 = (double)blueBallsBasket2 * (blueBallsBasket2 - 1) / (totalBallsBasket2 * (totalBallsBasket2 - 1));
-        prob += comb2;
-    }
-
-    // Извлечение 1 синих из корзины 1 и 1 из корзины 2
-    if (blueBallsBasket1 > 0 && blueBallsBasket2 > 0) {
-        prob += (double)blueBallsBasket1 / totalBallsBasket1 * (double)blueBallsBasket2 / totalBallsBasket2;
-    }
-
-    return prob;
+    double probBB = (double)totalBlue / totalBalls * (double)(totalBlue - 1) / (totalBalls - 1);
+    return probBB;
 }
 
 double MainWindow::calculateTwoRedProbability() {
-    double prob = 0.0;
+    int totalBlue = blueBallsBasket1 + blueBallsBasket2;
+    int totalRed = (totalBallsBasket1 - blueBallsBasket1) + (totalBallsBasket2 - blueBallsBasket2);
+    int totalBalls = totalBlue + totalRed;
 
-    // Для корзины 1
-    int redBalls1 = totalBallsBasket1 - blueBallsBasket1;
-    if (redBalls1 >= 2) {
-        double comb1 = (double)redBalls1 * (redBalls1 - 1) / (totalBallsBasket1 * (totalBallsBasket1 - 1));
-        prob += comb1;
-    }
+    if (totalBalls < 2) return 0.0;
 
-    // Для корзины 2
-    int redBalls2 = totalBallsBasket2 - blueBallsBasket2;
-    if (redBalls2 >= 2) {
-        double comb2 = (double)redBalls2 * (redBalls2 - 1) / (totalBallsBasket2 * (totalBallsBasket2 - 1));
-        prob += comb2;
-    }
-
-    // Извлечение 1 красного из корзины 1 и 1 из корзины 2
-    if (redBalls1 > 0 && redBalls2 > 0) {
-        prob += (double)redBalls1 / totalBallsBasket1 * (double)redBalls2 / totalBallsBasket2;
-    }
-
-    return prob;
+    double probRR = (double)totalRed / totalBalls * (double)(totalRed - 1) / (totalBalls - 1);
+    return probRR;
 }
 
 double MainWindow::calculateOneBlueOneRedProbability() {
-    double prob = 0.0;
+    int totalBlue = blueBallsBasket1 + blueBallsBasket2;
+    int totalRed = (totalBallsBasket1 - blueBallsBasket1) + (totalBallsBasket2 - blueBallsBasket2);
+    int totalBalls = totalBlue + totalRed;
 
-    // 1 синий из корзины 1 и 1 красный из корзины 2
-    if (blueBallsBasket1 > 0 && totalBallsBasket2 - blueBallsBasket2 > 0) {
-        prob += (double)blueBallsBasket1 / totalBallsBasket1 * (double)(totalBallsBasket2 - blueBallsBasket2) / totalBallsBasket2;
-    }
+    if (totalBalls < 2) return 0.0;
 
-    // 1 красный из корзины 1 и 1 синий из корзины 2
-    if (totalBallsBasket1 - blueBallsBasket1 > 0 && blueBallsBasket2 > 0) {
-        prob += (double)(totalBallsBasket1 - blueBallsBasket1) / totalBallsBasket1 * (double)blueBallsBasket2 / totalBallsBasket2;
-    }
-
-    return prob;
+    double probBB = calculateTwoBlueProbability();
+    double probRR = calculateTwoRedProbability();
+    return 1.0 - probBB - probRR;
 }
